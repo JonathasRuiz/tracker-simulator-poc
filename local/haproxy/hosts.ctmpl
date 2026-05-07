@@ -1,0 +1,3 @@
+{{ range service "tracker-app" }}
+{{ .Address }}:{{ .Port }}
+{{ end }}

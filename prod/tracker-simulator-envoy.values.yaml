@@ -1,0 +1,17 @@
+# Envoy templating values
+global:
+  appName: "tracker-simulator-envoy"
+  envoy:
+    serviceType: LoadBalancer # If you want to run locally using NodePort, replace this by NodePort
+    envoyPorts:
+      trackerServerPort: 8088 #If NodePort specify an available high port.
+      trackerServerGrpcPort: 9003 #If NodePort specify an available high port.
+      trackerClientPort: 8089 #If NodePort specify an available high port.
+      trackerAnalyticsPort: 5050 #If NodePort specify an available high port.
+      communicationsAppPort: 8080 #If NodePort specify an available high port.
+    appPorts:
+      trackerServerPort: 8088
+      trackerServerGrpcPort: 9003
+      trackerClientPort: 8089
+      trackerAnalyticsPort: 5050
+      communicationsAppPort: 8080

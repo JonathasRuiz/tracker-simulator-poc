@@ -1,0 +1,6 @@
+FROM hashicorp/consul-template:alpine
+
+USER root
+
+# Install socat (needed to write to the unix socket)
+RUN apk add --no-cache socat

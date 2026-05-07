@@ -1,0 +1,3 @@
+{{ range service "tracker-app-grpc" }}
+{{ .Address }}:{{ .Port }}
+{{ end }}
