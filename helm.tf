@@ -29,7 +29,7 @@ resource "helm_release" "tracker_simulator" {
         # Pass the dynamically generated Droplet IP into the YAML
         droplet_ip = digitalocean_droplet.compose_server.ipv4_address
         load_balancer_ip = var.load_balancer_ip
-        google_api_key = google_api_key
+        google_api_key = var.google_api_key
         })    
   ]
 

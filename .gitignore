@@ -4,3 +4,4 @@ kubeconfig.yaml
 *.tfstate*
 tfdestroyplan
 .terraform/
+.env

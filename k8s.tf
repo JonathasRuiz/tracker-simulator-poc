@@ -1,12 +1,12 @@
 resource "digitalocean_kubernetes_cluster" "app_cluster" {
   name    = "myapp-k8s-cluster"
   region  = var.region
-  version = "1.35.1-do.5" # Use a current version from doctl kubernetes options
+  version = "1.36.0-do.3" # Use a current version from doctl kubernetes options
   ha      = false          # Disable HA control plane — saves ~$40/mo, fine for a PoC
 
   node_pool {
     name       = "worker-pool"
-    size       = "s-2vcpu-4gb"
+    size       = "s-4vcpu-8gb"
     node_count = var.node_count
   }
 }

@@ -17,18 +17,25 @@ fi
 if ! command -v terraform &> /dev/null; then echo "Error: Terraform not installed."; exit 1; fi
 if ! command -v kubectl &> /dev/null; then echo "Error: kubectl not installed (required to fetch LB IP)."; exit 1; fi
 
-# 2. Prompt for the DigitalOcean token
-read -p "Enter your DigitalOcean Token (Input will be hidden): " -s DO_TOKEN
-echo ""
-export TF_VAR_do_token=$DO_TOKEN
-
-# 3. Prompt for the Google API key
-read -p "Enter your Google Maps API Key (Input will be hidden): " -s GOOGLE_API_KEY
-echo ""
-if [ -z "$GOOGLE_API_KEY" ]; then
-    echo "Error: Google Maps API Key cannot be empty."
+# 2. Load credentials from .env
+if [ ! -f ".env" ]; then
+    echo "Error: .env file not found. Please create one with DO_TOKEN and GOOGLE_API_KEY."
     exit 1
 fi
+set -a
+source .env
+set +a
+
+if [ -z "$DO_TOKEN" ]; then
+    echo "Error: DO_TOKEN is not set in .env."
+    exit 1
+fi
+if [ -z "$GOOGLE_API_KEY" ]; then
+    echo "Error: GOOGLE_API_KEY is not set in .env."
+    exit 1
+fi
+
+export TF_VAR_do_token=$DO_TOKEN
 export TF_VAR_google_api_key=$GOOGLE_API_KEY
 
 # 4. Prompt for the SSH public key
@@ -44,6 +51,27 @@ export TF_VAR_ssh_public_key=$(cat "$SSH_KEY_PATH")
 echo ""
 echo "Initializing Terraform..."
 terraform init -input=false
+
+# Import SSH key if it already exists in DigitalOcean to avoid "already in use" error
+SSH_FINGERPRINT=$(ssh-keygen -l -E md5 -f "$SSH_KEY_PATH" 2>/dev/null | awk '{print $2}' | sed 's/^MD5://')
+if [ -n "$SSH_FINGERPRINT" ]; then
+    EXISTING_KEY_ID=$(curl -s -H "Authorization: Bearer $DO_TOKEN" \
+        "https://api.digitalocean.com/v2/account/keys" | \
+        python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+fp = '${SSH_FINGERPRINT}'
+for key in data.get('ssh_keys', []):
+    if key.get('fingerprint') == fp:
+        print(key['id'])
+        break
+" 2>/dev/null)
+    if [ -n "$EXISTING_KEY_ID" ]; then
+        echo "SSH key already exists in DigitalOcean (ID: $EXISTING_KEY_ID), importing into Terraform state..."
+        terraform import digitalocean_ssh_key.default "$EXISTING_KEY_ID" 2>/dev/null || true
+    fi
+fi
+
 terraform apply -auto-approve
 
 # 5. Extract Kubeconfig

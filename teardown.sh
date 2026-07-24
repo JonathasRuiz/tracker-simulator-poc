@@ -22,11 +22,20 @@ if [ ! -f "terraform.tfstate" ]; then
     exit 1
 fi
 
-# 3. Securely prompt for the DigitalOcean token
-read -p "Enter your DigitalOcean Token to authorize deletion (Input will be hidden): " -s DO_TOKEN
-echo ""
+# 3. Load credentials from .env
+if [ ! -f ".env" ]; then
+    echo "Error: .env file not found. Please create one with DO_TOKEN."
+    exit 1
+fi
+set -a
+source .env
+set +a
 
-# Export the token
+if [ -z "$DO_TOKEN" ]; then
+    echo "Error: DO_TOKEN is not set in .env."
+    exit 1
+fi
+
 export TF_VAR_do_token=$DO_TOKEN
 
 # 4. Execute Terraform Destroy
